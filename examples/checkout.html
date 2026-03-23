@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Checkout</title>
+  </head>
+  <body>
+    <main>
+      <h1>Checkout</h1>
+      <form>
+        <label for="email">Email</label>
+        <input id="email" name="email" type="email" />
+
+        <label for="card_number">Card Number</label>
+        <input id="card_number" name="card_number" type="text" />
+
+        <label for="coupon_code">Coupon Code</label>
+        <input id="coupon_code" name="coupon_code" type="text" />
+
+        <button id="place_order_button" type="submit">Place Order</button>
+      </form>
+      <div id="order_confirmation" aria-live="polite"></div>
+      <div id="inventory_alert" aria-live="polite"></div>
+      <div id="payment_error" aria-live="polite"></div>
+    </main>
+  </body>
+</html>

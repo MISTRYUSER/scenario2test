@@ -1,0 +1,56 @@
+scenario:
+  name: signup flow
+  description: Validate user registration across duplicate-email and successful-onboarding branches.
+  metadata:
+    domain: onboarding
+    owner: growth-qa
+    base_url: http://127.0.0.1:8001
+  steps:
+    - id: open_signup
+      action: open_page
+      target: /signup.html
+      expected: signup page is visible
+      next: input_email
+    - id: input_email
+      action: input
+      field: email
+      value: new_user@example.com
+      next: input_username
+    - id: input_username
+      action: input
+      field: username
+      value: new_user
+      next: input_password
+    - id: input_password
+      action: input
+      field: password
+      value: DemoPassword123
+      next: submit_signup
+    - id: submit_signup
+      action: click
+      target: signup_button
+      expected: registration result is returned
+      branches:
+        - condition: email_already_registered
+          next: duplicate_email
+        - condition: signup_succeeds
+          next: welcome_dashboard
+    - id: duplicate_email
+      action: view_message
+      target: duplicate_email_alert
+      expected: duplicate email guidance is shown
+      type: end
+    - id: welcome_dashboard
+      action: view_message
+      target: welcome_banner
+      expected: onboarding confirmation is displayed
+      type: end
+  assertions:
+    - type: response
+      target: status_code
+      value: "201"
+  targets:
+    registration_api:
+      endpoint: /api/signup
+      path: internal/user/service.go
+      symbol: Register

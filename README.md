@@ -1,96 +1,84 @@
-# Scenario2Test Platform
+自动化测试平台：从业务场景到端到端测试的工程化演进
+核心设计理念
 
-Scenario2Test Platform is an orchestrator for scenario-driven automated test generation.
+不要直接让大模型“看 YAML 随便生成测试”，而是先把自然语言场景变成可控的执行路径，再将结构化路径交给底层引擎生成资产。
 
-It turns a scenario DSL into:
+架构流水线：
 
-- a control-flow graph
-- enumerated execution paths
-- strategy-expanded test cases
-- AUTOTEST-ready end-to-end payloads and scripts
+Scenario DSL -> Parser -> CFG -> Path Enumeration -> Strategy Engine -> AUTOTEST Adapter -> Structured Result
+模块拆解
+Module 1: Scenario DSL（业务场景定义）
+它是什么： 业务流程的结构化描述，通过 YAML 文件编写。
+它的作用： 作为整个测试平台的唯一输入源，把自然语言需求转成机器可读格式。
+具体内容： 定义用户起始动作、后续动作、分支节点、验证目标。
+例如：打开页面 -> 输入账号密码 -> 点击登录。
+核心价值： 实现“自然语言需求的工程化”。
+Module 2: Parser（解析与归一化）
+它是什么： 系统的“翻译官”。
+它的作用：
+读取 YAML 文本配置，转成系统内部内存对象，例如 Go 结构体。
+兼容不同写法，例如 open_url 和 open_page，统一归一化成标准内部模型。
+核心价值： 隔离外部输入的不规范，保证下游模块只处理标准数据。
+Module 3: CFG（控制流图）
+它是什么： Control Flow Graph，把线性步骤转成图结构。
+它的作用： 表达真实业务中的分支逻辑。
+节点（Node）： 代表动作或状态，例如点击按钮。
+边（Edge）： 代表步骤流转关系。
+条件边： 只有满足特定状态时才会触发，例如未登录、已登录。
+核心价值： 让系统具备理解“分支逻辑”的能力，为后续提取测试路径提供基础结构。
+Module 4: Path Enumeration（路径枚举）
+它是什么： 从 CFG 中提取所有可执行的完整路径。
+它的作用： 图本身不能直接测试，必须拆成具体的执行路线。系统从起点遍历，枚举出所有完整路径，例如：
+Path 01：开始 -> 未登录分支 -> 输入密码失败 -> 结束
+Path 02：开始 -> 已登录分支 -> 搜索商品 -> 结束
+核心价值： 保证测试覆盖率，把抽象流程图展开成可独立执行的测试路径。
+Module 5: Strategy Engine（策略引擎）
+它是什么： 把单条执行路径扩展成多条测试用例的放大器。
+它的作用： 从不同测试视角对同一条路径做扩展，内置 5 类策略：
+happy_path：正向流程
+invalid_input：非法输入
+auth_fail：鉴权失败
+boundary：边界值测试
+rate_limit：接口限流或重复点击
+核心价值： 一条路径扩成多个维度的用例，显著提升测试深度和系统健壮性。
 
-Detailed code analysis and verification notes:
+公式：
 
-- [2026-03-23 Scenario2Test Code Analysis Wiki](/Users/wentao.xue/Project/scenario2test/docs/wiki/2026-03-23-scenario2test-code-analysis.md)
+Path × Strategy = Test Cases
+Module 6: AUTOTEST & Structured Result（生成与沉淀）
+它是什么： 大模型与执行层之间的桥梁。
+它的作用：
+将策略引擎产出的严谨用例交给大模型。
+由大模型生成具体的 E2E 自动化测试脚本，例如 Selenium 脚本。
+最终统一输出成结构化结果，供前端展示，例如 P0/P1 用例、脚本摘要、执行结果。
+核心价值： 大模型只在精确上下文中工作，不再负责规划逻辑，只负责生成执行资产，降低胡编乱造风险。
+为什么要这样设计
 
-## Architecture
+相比“直接写 Prompt 丢给大模型生成测试”，这套工程化架构解决了 4 个核心问题：
 
-```text
-Scenario DSL -> Parser -> Flow Graph -> Path Generator -> Strategy Engine
-                                                     -> E2E Adapter
-                                          -> Aggregator -> JSON
-```
+分支不清晰
+纯大模型容易漏掉边缘分支；使用 CFG 可以精确表达全部分支结构。
+覆盖率不可控
+纯大模型输出随机性强；使用 路径枚举 可以确保逻辑路径完整覆盖。
+测试视角单一
+纯大模型通常只覆盖 Happy Path；使用 策略引擎 可以强制补齐异常、边界、限流等场景。
+结果不稳定
+把大模型放在流水线最后一步，只负责脚本翻译，不负责逻辑规划，整体结果更稳定、更可控。
+结论
 
-## Project Layout
+这不是一个简单的 Prompt 套壳工具，而是一个真正的测试工程化平台。
 
-```text
-scenario2test/
-├── cmd/server
-├── internal/parser
-├── internal/graph
-├── internal/path
-├── internal/strategy
-├── internal/generator/e2e
-├── internal/aggregator
-├── api
-├── configs
-└── examples
-```
+它的核心不是“让模型替你瞎生成”，而是：
 
-## Quick Start
+先把业务场景结构化
+再把流程逻辑图化
+然后把路径穷举出来
+再做策略扩展
+最后才让大模型生成脚本
 
-1. Install Go 1.22+.
-2. Run `go mod tidy`.
-3. Run `go run ./cmd/server --scenario ./examples/login.yaml`.
-4. Or run `go run ./cmd/server --listen :8080` to expose the HTTP API.
-5. If `./web/dist` exists, the backend also serves the built frontend at `/`.
-6. Run `./scripts/verify_all.sh` for a full local verification pass.
+这样的设计才能同时满足：
 
-## Web UI
-
-The repo also includes a React + Vite frontend in [web](/Users/wentao.xue/Project/scenario2test/web).
-
-1. Start the backend with `go run ./cmd/server --listen :8080`.
-2. In `/Users/wentao.xue/Project/scenario2test/web`, run `npm install`.
-3. Run `npm run dev`.
-4. For a production bundle, run `npm run build`, then start the Go server with `--listen :8080`.
-
-The frontend proxies `/generate` and `/healthz` to `http://localhost:8080`.
-
-The current implementation exposes a single AUTOTEST channel.
-
-## Adapter Modes
-
-Adapters are configuration-driven via [config.example.yaml](/Users/wentao.xue/Project/scenario2test/configs/config.example.yaml).
-
-- `e2e.mode: mock | cli`
-  `cli` mode executes the configured AUTOTEST command with placeholder substitution such as `{{url}}`, `{{signature}}`, and `{{auth_data_file}}`.
-
-When an external adapter is not configured or fails, Scenario2Test keeps returning the internal draft output instead of failing the entire generation pipeline.
-
-## Local Integrations
-
-This workspace already includes local clones under `/Users/wentao.xue/Project/integrations` for:
-
-- `AUTOTEST`
-
-Recommended local config:
-- [config.local.yaml](/Users/wentao.xue/Project/scenario2test/configs/config.local.yaml)
-- [config.integration.yaml](/Users/wentao.xue/Project/scenario2test/configs/config.integration.yaml)
-
-Helper scripts:
-- [setup_integrations.sh](/Users/wentao.xue/Project/scenario2test/scripts/setup_integrations.sh)
-- [run_local_stack.sh](/Users/wentao.xue/Project/scenario2test/scripts/run_local_stack.sh)
-- [verify_all.sh](/Users/wentao.xue/Project/scenario2test/scripts/verify_all.sh)
-- [run_full_integration.sh](/Users/wentao.xue/Project/scenario2test/scripts/run_full_integration.sh)
-
-Current environment note:
-- `AUTOTEST` can be installed with Python 3.9 and its CLI integration is wired.
-
-## Full Integration Mode
-
-`config.integration.yaml` and `run_full_integration.sh` wire the AUTOTEST generator in this workspace:
-
-- AUTOTEST runs against the local mock LLM endpoint and the static example login page.
-
-Use `./scripts/run_full_integration.sh 8094` to start the local mock LLM, static example page, Go server, and then POST the example scenario through the full orchestrator.
+覆盖率可控
+逻辑可解释
+结果可复用
+生成可落地

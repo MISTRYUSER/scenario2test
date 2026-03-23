@@ -1,0 +1,63 @@
+scenario:
+  name: checkout flow
+  description: Validate checkout completion against inventory and payment outcomes.
+  metadata:
+    domain: commerce
+    owner: checkout-qa
+    base_url: http://127.0.0.1:8001
+  steps:
+    - id: open_checkout
+      action: open_page
+      target: /checkout.html
+      expected: checkout page is visible
+      next: input_email
+    - id: input_email
+      action: input
+      field: email
+      value: buyer@example.com
+      next: input_card
+    - id: input_card
+      action: input
+      field: card_number
+      value: "4111111111111111"
+      next: apply_coupon
+    - id: apply_coupon
+      action: input
+      field: coupon_code
+      value: SPRING24
+      next: submit_order
+    - id: submit_order
+      action: click
+      target: place_order_button
+      expected: order submission result is returned
+      branches:
+        - condition: payment_authorized_and_inventory_reserved
+          next: order_confirmed
+        - condition: inventory_unavailable
+          next: inventory_alert
+        - condition: payment_declined
+          next: payment_failed
+    - id: order_confirmed
+      action: view_message
+      target: order_confirmation
+      expected: order confirmation is displayed
+      type: end
+    - id: inventory_alert
+      action: view_message
+      target: inventory_alert
+      expected: out-of-stock notification is displayed
+      type: end
+    - id: payment_failed
+      action: view_message
+      target: payment_error
+      expected: payment failure guidance is displayed
+      type: end
+  assertions:
+    - type: response
+      target: status_code
+      value: "200"
+  targets:
+    checkout_api:
+      endpoint: /api/checkout
+      path: internal/checkout/service.go
+      symbol: SubmitOrder

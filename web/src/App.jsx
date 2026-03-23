@@ -130,7 +130,8 @@ export default function App() {
                   Scenario2Test Platform
                 </h1>
                 <p className="mt-2 max-w-2xl text-sm leading-6 text-stone-600 md:text-base">
-                  当前版本只保留 AUTOTEST 通道：从 DSL 到 CFG、路径枚举，再把结果分发成端到端测试脚本。
+                  当前版本聚焦 AUTOTEST 生成链路：系统将 Scenario DSL 解析为 CFG，完成路径枚举后，生成 AUTOTEST
+                  端到端测试资产。
                 </p>
               </div>
             </div>
@@ -197,7 +198,7 @@ export default function App() {
                   </div>
                 </div>
 
-                <ControlBlock title="测试生成策略">
+                <ControlBlock title="用例覆盖维度">
                   <Checkbox
                     label="正常路径"
                     checked={strategies.happyPath}
@@ -227,7 +228,7 @@ export default function App() {
 
                 <ControlBlock title="目标适配器">
                   <div className="rounded-2xl border border-orange-200 bg-orange-50/80 px-3 py-3 text-sm text-orange-800">
-                    仅启用 AUTOTEST 端到端适配器
+                    当前仅启用 AUTOTEST 端到端测试适配器。
                   </div>
                 </ControlBlock>
 
@@ -245,7 +246,7 @@ export default function App() {
                 </button>
 
                 <p className="text-xs leading-5 text-stone-500">
-                  页面只展示 AUTOTEST 输出，策略开关会实时过滤当前展示的测试用例。
+                  页面当前仅展示 AUTOTEST 输出；上方开关用于按覆盖维度筛选生成的测试用例。
                 </p>
               </div>
             </Panel>
