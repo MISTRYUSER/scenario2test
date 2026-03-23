@@ -1,0 +1,38 @@
+scenario:
+  name: login flow
+  description: Validate login behavior for valid and invalid user credentials.
+  metadata:
+    domain: authentication
+    owner: qa-platform
+    base_url: http://127.0.0.1:8080
+    autotest_auth_data_file: /Users/wentao.xue/Project/integrations/AUTOTEST/selenium-based-llm-model/auth_test_data.json
+  steps:
+    - id: open_login
+      action: open_page
+      target: /login
+      expected: login page is visible
+    - id: input_username
+      action: input
+      field: username
+      value: valid_user
+    - id: input_password
+      action: input
+      field: password
+      value: invalid_password
+    - id: click_login
+      action: click
+      target: login_button
+      expected: authentication result is returned
+  branches:
+    - from: click_login
+      condition: credentials_invalid
+      to: end
+  assertions:
+    - type: response
+      target: status_code
+      value: "401"
+  targets:
+    auth_api:
+      endpoint: /api/login
+      path: internal/auth/service.go
+      symbol: Login

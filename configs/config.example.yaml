@@ -1,0 +1,15 @@
+server:
+  port: 8080
+
+e2e:
+  provider: AUTOTEST
+  mode: mock
+  workdir: /absolute/path/to/AUTOTEST
+  command:
+    - python
+    - autotest.py
+    - --url
+    - "{{url}}"
+    - --loglevel
+    - INFO
+  timeout: 60

@@ -1,0 +1,12 @@
+.DS_Store
+**/.DS_Store
+
+web/node_modules/
+web/node_modules.broken.*/
+web/dist/
+web/.vite/
+web/package-lock.broken.*.json
+
+*.log
+*.tmp
+*.temp

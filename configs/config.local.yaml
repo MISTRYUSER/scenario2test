@@ -1,0 +1,12 @@
+server:
+  port: 8080
+
+e2e:
+  provider: AUTOTEST
+  mode: cli
+  workdir: /Users/wentao.xue/Project/integrations/AUTOTEST/selenium-based-llm-model
+  command:
+    - /bin/zsh
+    - -lc
+    - PATH=/Users/wentao.xue/Project/integrations/.venvs/autotest/bin:$PATH OPENAI_API_KEY="${OPENAI_API_KEY:-dummy}" OPENAI_BASE_URL="${OPENAI_BASE_URL:-http://127.0.0.1:11434/v1}" GOOGLE_CHROME_BIN="${GOOGLE_CHROME_BIN:-/Applications/Google Chrome.app/Contents/MacOS/Google Chrome}" SCENARIO2TEST_AUTOTEST_EXECUTE_GENERATED="${SCENARIO2TEST_AUTOTEST_EXECUTE_GENERATED:-0}" /Users/wentao.xue/Project/integrations/.venvs/autotest/bin/python autotest_v2.py --url "{{url}}" --loglevel INFO
+  timeout: 180

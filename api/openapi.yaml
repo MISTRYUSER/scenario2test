@@ -1,0 +1,17 @@
+openapi: 3.1.0
+info:
+  title: Scenario2Test Platform API
+  version: 0.1.0
+paths:
+  /generate:
+    post:
+      summary: Generate tests from a scenario DSL
+      requestBody:
+        required: true
+        content:
+          application/x-yaml:
+            schema:
+              type: string
+      responses:
+        "200":
+          description: Aggregated test generation result
